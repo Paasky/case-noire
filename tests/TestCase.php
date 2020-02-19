@@ -86,10 +86,13 @@ abstract class TestCase extends BaseTestCase
 
     public function location(Point $coords = null): Location
     {
+        $coords = $coords ?: $coords ?: new Point(rand(-179, 179), rand(-80, 80));
         return new Location([
             'source' => Location::SOURCE_TEST,
             'source_id' => rand(1,999999),
-            'coords' => $coords ?: new Point(rand(-179, 179), rand(-80, 80)),
+            'coords' => $coords,
+            'lat' => $coords->getLat(),
+            'lng' => $coords->getLng(),
             'address' => rand(1,99999) . ' Test Road',
             'name' => null,
             'description' => null,

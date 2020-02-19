@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Locations\LocationSettings;
 use App\Models\Common\HasAndSpawnsInstances;
 use App\Models\Common\CaseNoireModel;
 use App\Models\Common\HasInstances;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string|null $description
  * @property string|null $image_url
- * @property string $location_settings
+ * @property LocationSettings $location_settings
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\AgencyCase[] $agencyCases

@@ -19,12 +19,16 @@ class CreateLocationsTable extends Migration
             $table->string('source', 255)->index();
             $table->string('source_id', 255)->index();
             $table->point('coords')->index();
+            $table->float('lat', 13, 10)->index();
+            $table->float('lng', 13, 10)->index();
             $table->string('address', 255);
             $table->string('name', 255)->nullable();
             $table->text('description')->nullable();
             $table->text('image_url')->nullable();
             $table->text('link')->nullable();
             $table->timestamps();
+
+            $table->index(['lat', 'lng'], 'lat_lng_idx');
         });
     }
 

@@ -23,7 +23,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int|null $evidence_id
  * @property int|null $evidence_requirement_id
  * @property string|null $evidence_requirement_type
- * @property string $location_settings
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\AgencyCase[] $agencyCases

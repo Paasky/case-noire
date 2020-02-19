@@ -17,6 +17,8 @@ use Illuminate\Database\Query\Expression;
  * @property string $source
  * @property string $source_id
  * @property Point|null $coords
+ * @property float|null $lat
+ * @property float|null $lng
  * @property string $address
  * @property string|null $name
  * @property string|null $description
@@ -83,6 +85,8 @@ class Location extends CaseNoireModel
         'source',
         'source_id',
         'coords',
+        'lat',
+        'lng',
         'address',
         'name',
         'description',
@@ -121,28 +125,43 @@ class Location extends CaseNoireModel
     {
         $query = $query ?: static::query();
 
-        $maxRangeQuery = static
-            ::select(['id'])
-            ->where(static::radiusExpression($center), '<=', $maxRangeMeters);
-        $query->whereIn('id', $maxRangeQuery);
+        $query->whereRaw(static::radiusExpression($center, $maxRangeMeters, '<='));
 
         if ($minRangeMeters) {
-            $minRangeQuery = static
-                ::select(['id'])
-                ->where(static::radiusExpression($center), '>', $minRangeMeters);
-            $query->whereNotIn('id', $minRangeQuery);
+            $query->whereRaw(static::radiusExpression($center, $minRangeMeters, '>='));
         }
 
         return $query;
     }
 
-    public static function radiusExpression(Point $center): Expression
+    public static function radiusExpression(Point $center, float $radiusM, string $operator = '>='): Expression
     {
-        $sinYradians = sin(deg2rad($center->getLng()));
-        $cosYradians = cos(deg2rad($center->getLng()));
-        $centerXradians = deg2rad($center->getLat());
+        if (!in_array($operator, ['>', '<', '>=', '<='], true)) {
+            throw new \BadFunctionCallException("operator $operator is invalid, allowed: ['>', '<', '>=', '<=']");
+        }
+        $earthRadius = self::EARTH_RADIUS_IN_M;
+        $lat = (float) $center->getLat();
+        $lng = (float) $center->getLng();
 
-        return \DB::raw("acos({$sinYradians} * sin(radians(Y(coords))) + {$cosYradians} * cos(radians(Y(coords))) * cos(radians(X(coords)) - {$centerXradians})) * " . self::EARTH_RADIUS_IN_M);
+        // Generate  bounding box
+//        $minLat = $lat - rad2deg($radiusM / $earthRadius);
+//        $maxLat = $lat + rad2deg($radiusM / $earthRadius);
+//        $minLng = $lng - rad2deg(asin($radiusM / $earthRadius) / cos(deg2rad($lat)));
+//        $maxLng = $lng + rad2deg(asin($radiusM / $earthRadius) / cos(deg2rad($lat)));
+
+        return \DB::raw(
+            // Bound box makes this a lot faster
+//            "lat BETWEEN $minLat AND $maxLat AND " .
+//            "lng BETWEEN $minLng AND $maxLng AND " .
+
+            // Within radius
+            "$earthRadius * ACOS (" .
+                " COS( RADIANS($lat) )" .
+                "* COS( RADIANS(lat) )" .
+                "* COS( RADIANS(lng) - RADIANS($lng) )" .
+                "+ SIN( RADIANS($lat) )" .
+                "* SIN( RADIANS(lat) )" .
+            ") $operator $radiusM");
     }
 
     const EARTH_RADIUS_IN_M = 6371000;

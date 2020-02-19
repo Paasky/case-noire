@@ -53,6 +53,8 @@ class LocationBlueprint implements BlueprintInterface
             'source' => $this->source,
             'source_id' => $this->sourceId,
             'coords' => $this->coords,
+            'lat' => $this->coords->getLat(),
+            'lng' => $this->coords->getLng(),
             'type' => $this->type,
             'address' => $this->address,
             'name' => $this->name,

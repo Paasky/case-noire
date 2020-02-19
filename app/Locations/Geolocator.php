@@ -18,36 +18,25 @@ class Geolocator
     }
 
     /**
-     * @param float $lat
-     * @param float $lng
-     * @param string[] $types
-     * @return LocationBlueprint[]
-     */
-    public function findInCoords(float $lat, float $lng, array $types = []): array
-    {
-        return $this->api->findByLatLng($lat, $lng, $types);
-    }
-
-    /**
-     * @param Point $randomCenter
+     * @param Point $center
      * @param int $maxRangeMeters
      * @param int $minRangeMeters
      * @param string[] $types
      * @return LocationBlueprint[]
      */
     public function findInRange(
-        Point $randomCenter,
+        Point $center,
         int $maxRangeMeters,
         int $minRangeMeters = 0,
-        array $types = []
+        array $types = Location::TYPES
     ): array {
-        $randomCenter = LocationManager::getRandomPoint($randomCenter, $maxRangeMeters, $minRangeMeters);
+        $center = LocationManager::getRandomPoint($center, $maxRangeMeters, $minRangeMeters);
 
         $blueprints = [];
         foreach ($types as $type) {
             $blueprints = array_merge(
                 $blueprints,
-                $this->api->findByLatLng($randomCenter->getLat(), $randomCenter->getLng(), [$type])
+                $this->api->findByLatLng($center->getLat(), $center->getLng(), [$type])
             );
         }
         return $blueprints;
