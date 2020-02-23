@@ -14,6 +14,7 @@ use App\Models\Common\HasAndSpawnsInstances;
 use App\Models\Common\CaseNoireModel;
 use App\Models\Common\CreatesInstances;
 use App\Models\Common\GivesClues;
+use App\Models\Common\HasCoordinates;
 use App\Models\Common\HasInstances;
 use App\Models\Common\HasLocation;
 use App\Models\Common\IsPartOfCase;
@@ -265,7 +266,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function verifyIsPartOfCase(CaseNoireModel $model)
     {
-        $caseTemplate = $model->caseTemplate ?? $this->caseTemplate();
+        $caseTemplate = $this->caseTemplate();
         $caseTemplate->save();
         $model->case_template_id = $caseTemplate->id;
         $model->save();
@@ -317,17 +318,20 @@ abstract class TestCase extends BaseTestCase
 
         $caseTemplate = $model->caseTemplate ?? $this->caseTemplate();
 
+        $location = $this->location();
+        $location->save();
+
         $clue = $this->clue($caseTemplate);
         $conversation = $this->conversation($caseTemplate);
         $event = $this->event($caseTemplate);
         $evidence = $this->evidence($caseTemplate);
         $person = $this->person($caseTemplate);
 
-        $model->clues()->save($clue);
-        $model->conversations()->save($conversation);
-        $model->events()->save($event);
-        $model->evidences()->save($evidence);
-        $model->persons()->save($person);
+        $model->setInstanceOf($clue);
+        $model->setInstanceOf($conversation);
+        $model->setInstanceOf($event);
+        $model->setInstanceOf($evidence);
+        $model->setInstanceOf($person, $location);
 
         $model->refresh();
 
@@ -343,6 +347,9 @@ abstract class TestCase extends BaseTestCase
         $this::assertEquals($person->id, $model->persons[0]->id);
 
         $this::assertEquals(5, $model->modelInstances->count());
+
+        $this::assertEquals(1, $model->locations->count());
+        $this::assertEquals($location->id, $model->locations[0]->id);
 
         $model->clues()->delete();
         $model->conversations()->delete();
@@ -446,6 +453,20 @@ abstract class TestCase extends BaseTestCase
         $model->givenClues[0]->delete();
         $model->refresh();
         $this::assertEquals(0, count($model->givenClues));
+    }
+
+    /**
+     * @param HasCoordinates|CaseNoireModel $model
+     * @throws \Exception
+     */
+    public function verifyHasCoordinates(CaseNoireModel $model): void
+    {
+        $coords = new Point(10,20);
+        $model->coords = $coords;
+        $model->save();
+        $this::assertEquals($coords, $model->coords);
+        $this::assertEquals($coords->getLat(), $model->lat);
+        $this::assertEquals($coords->getLng(), $model->lng);
     }
 
     public static function assertThrows(

@@ -64,10 +64,7 @@ class LocationBlueprint implements BlueprintInterface
         ];
     }
 
-    /**
-     * @return Location|null
-     */
-    public function getExistingModel()
+    public function findExistingModel(): ?Location
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
         return Location::where($this->getSearchParams())->first();

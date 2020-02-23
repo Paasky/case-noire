@@ -121,7 +121,7 @@ class LocationSettings implements Jsonable
     /**
      * @return string
      */
-    public function getSpawnCenterAtType(): string
+    public function getSpawnAtClass(): string
     {
         return $this->spawnCenterAtType;
     }
@@ -139,7 +139,7 @@ class LocationSettings implements Jsonable
     /**
      * @return string
      */
-    public function getSpawnCenterAtTypeName(): string
+    public function getSpawnAtName(): string
     {
         return $this->spawnCenterAtTypeName;
     }

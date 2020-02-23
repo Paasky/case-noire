@@ -19,6 +19,8 @@ class CreateAgentsTable extends Migration
             $table->string('name', 255);
             $table->string('slogan', 255)->nullable();
             $table->point('coords')->nullable()->index();
+            $table->float('lat', 13, 10)->nullable()->index();
+            $table->float('lng', 13, 10)->nullable()->index();
             $table->timestamps();
         });
     }

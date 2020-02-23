@@ -16,9 +16,12 @@ class CreateModelInstancesTable extends Migration
         Schema::create('model_instances', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->bigInteger('agency_case_id')->index();
-            $table->bigInteger('location_id')->nullable()->index();
             $table->bigInteger('model_id')->index();
             $table->string('model_type', 255)->index();
+            $table->bigInteger('location_id')->nullable()->index();
+            $table->point('coords')->nullable()->index();
+            $table->float('lat', 13, 10)->nullable()->index();
+            $table->float('lng', 13, 10)->nullable()->index();
             $table->string('status', 255)->nullable()->index();
             $table->json('data')->nullable();
             $table->timestamps();

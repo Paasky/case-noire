@@ -24,5 +24,7 @@ class AgentTest extends TestCase
         $agent->refresh();
 
         $this::assertEquals(0, $agent->agencies->count());
+
+        $this->verifyHasCoordinates($agent);
     }
 }

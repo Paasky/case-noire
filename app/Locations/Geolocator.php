@@ -33,7 +33,7 @@ class Geolocator
         $center = LocationManager::getRandomPoint($center, $maxRangeMeters, $minRangeMeters);
 
         $blueprints = [];
-        foreach ($types as $type) {
+        foreach ($types ?: Location::TYPES as $type) {
             $blueprints = array_merge(
                 $blueprints,
                 $this->api->findByLatLng($center->getLat(), $center->getLng(), [$type])

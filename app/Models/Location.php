@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Common\CaseNoireModel;
+use App\Models\Common\HasCoordinates;
 use Grimzy\LaravelMysqlSpatial\Eloquent\SpatialTrait;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Database\Eloquent\Builder;
@@ -65,7 +66,7 @@ use Illuminate\Database\Query\Expression;
  */
 class Location extends CaseNoireModel
 {
-    use SpatialTrait;
+    use HasCoordinates;
 
     const SOURCE_MAPBOX = 'mapbox';
     const SOURCE_TEST = 'test';
@@ -85,8 +86,6 @@ class Location extends CaseNoireModel
         'source',
         'source_id',
         'coords',
-        'lat',
-        'lng',
         'address',
         'name',
         'description',
@@ -95,19 +94,10 @@ class Location extends CaseNoireModel
         'hash', // overwritten on create/save
     ];
 
-    public $spatialFields = [
-        'coords',
-    ];
-
-    public static function create($attributes = [])
-    {
-        $attributes['hash'] = static::generateHash($attributes['coords'], $attributes['address']);
-        return parent::create($attributes);
-    }
-
     public function save(array $options = [])
     {
         $this->hash = static::generateHash($this->coords, $this->address);
+        $this->setLatLngOnSave();
         return parent::save($options);
     }
 
@@ -120,50 +110,4 @@ class Location extends CaseNoireModel
     {
         return $this->belongsToMany(AgencyCase::class, ModelInstance::table());
     }
-
-    public static function inRange(Point $center, int $maxRangeMeters, int $minRangeMeters = 0, Builder &$query = null): Builder
-    {
-        $query = $query ?: static::query();
-
-        $query->whereRaw(static::radiusExpression($center, $maxRangeMeters, '<='));
-
-        if ($minRangeMeters) {
-            $query->whereRaw(static::radiusExpression($center, $minRangeMeters, '>='));
-        }
-
-        return $query;
-    }
-
-    public static function radiusExpression(Point $center, float $radiusM, string $operator = '>='): Expression
-    {
-        if (!in_array($operator, ['>', '<', '>=', '<='], true)) {
-            throw new \BadFunctionCallException("operator $operator is invalid, allowed: ['>', '<', '>=', '<=']");
-        }
-        $earthRadius = self::EARTH_RADIUS_IN_M;
-        $lat = (float) $center->getLat();
-        $lng = (float) $center->getLng();
-
-        // Generate  bounding box
-//        $minLat = $lat - rad2deg($radiusM / $earthRadius);
-//        $maxLat = $lat + rad2deg($radiusM / $earthRadius);
-//        $minLng = $lng - rad2deg(asin($radiusM / $earthRadius) / cos(deg2rad($lat)));
-//        $maxLng = $lng + rad2deg(asin($radiusM / $earthRadius) / cos(deg2rad($lat)));
-
-        return \DB::raw(
-            // Bound box makes this a lot faster
-//            "lat BETWEEN $minLat AND $maxLat AND " .
-//            "lng BETWEEN $minLng AND $maxLng AND " .
-
-            // Within radius
-            "$earthRadius * ACOS (" .
-                " COS( RADIANS($lat) )" .
-                "* COS( RADIANS(lat) )" .
-                "* COS( RADIANS(lng) - RADIANS($lng) )" .
-                "+ SIN( RADIANS($lat) )" .
-                "* SIN( RADIANS(lat) )" .
-            ") $operator $radiusM");
-    }
-
-    const EARTH_RADIUS_IN_M = 6371000;
-    public $earthRadiusInMeters = self::EARTH_RADIUS_IN_M;
 }

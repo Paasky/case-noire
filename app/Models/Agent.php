@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Common\CaseNoireModel;
+use App\Models\Common\HasCoordinates;
 use App\User;
 use Grimzy\LaravelMysqlSpatial\Eloquent\SpatialTrait;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
@@ -54,7 +55,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Agent extends CaseNoireModel
 {
-    use SpatialTrait;
+    use HasCoordinates;
 
     protected $fillable = [
         'user_id',
@@ -63,9 +64,11 @@ class Agent extends CaseNoireModel
         'slogan',
     ];
 
-    public $spatialFields = [
-        'coords',
-    ];
+    public function save(array $options = [])
+    {
+        $this->setLatLngOnSave();
+        return parent::save($options);
+    }
 
     public function agencies(): BelongsToMany
     {

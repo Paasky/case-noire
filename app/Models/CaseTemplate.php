@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Common\CaseNoireModel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 /**
@@ -15,27 +16,28 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
  * @property string $type
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\AgencyCase[] $agencyCases
+ * @property-read Collection|Clue[]|Conversation[]|Event[]|Evidence[]|Person[] $all_models
+ * @property-read \Illuminate\Database\Eloquent\Collection|AgencyCase[] $agencyCases
  * @property-read int|null $agency_cases_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Clue[] $clues
+ * @property-read \Illuminate\Database\Eloquent\Collection|Clue[] $clues
  * @property-read int|null $clues_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Conversation[] $conversations
+ * @property-read \Illuminate\Database\Eloquent\Collection|Conversation[] $conversations
  * @property-read int|null $conversations_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Event[] $events
+ * @property-read \Illuminate\Database\Eloquent\Collection|Event[] $events
  * @property-read int|null $events_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Evidence[] $evidences
+ * @property-read \Illuminate\Database\Eloquent\Collection|Evidence[] $evidences
  * @property-read int|null $evidences_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Person[] $persons
+ * @property-read \Illuminate\Database\Eloquent\Collection|Person[] $persons
  * @property-read int|null $persons_count
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\CaseTemplate newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\CaseTemplate newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\CaseTemplate query()
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\CaseTemplate whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\CaseTemplate whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\CaseTemplate whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\CaseTemplate whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\CaseTemplate whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\CaseTemplate whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate query()
+ * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 class CaseTemplate extends CaseNoireModel
@@ -74,6 +76,15 @@ class CaseTemplate extends CaseNoireModel
     public function persons(): HasMany
     {
         return $this->hasMany(Person::class);
+    }
+
+    public function getAllModelsAttribute(): Collection
+    {
+        return $this->clues
+            ->merge($this->conversations)
+            ->merge($this->events)
+            ->merge($this->evidences)
+            ->merge($this->persons);
     }
 
     public function delete()

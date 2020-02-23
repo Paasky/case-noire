@@ -15,26 +15,45 @@ class LocationManager
 {
     /**
      * @param AgencyCase $agencyCase
-     * @param CaseNoireModel|HasAndSpawnsInstances $forModel
+     * @param CaseNoireModel|HasAndSpawnsInstances $model
      * @return Location
      * @throws \Exception
      */
-    public static function get(AgencyCase $agencyCase, CaseNoireModel $forModel): Location
+    public static function getForCaseModel(AgencyCase $agencyCase, CaseNoireModel $model): Location
     {
-        $location = static::getSpawnCenterLocation($agencyCase, $forModel);
+        $location = static::getSpawnCenterLocation($agencyCase, $model);
 
-        $reservedIds = $agencyCase->locations->pluck('id')->add($agencyCase->location_id);
-        $locationSettings = $forModel->location_settings;
+        $notIds = $agencyCase->locations->pluck('id')->add($agencyCase->location_id)->all();
+        $locationSettings = $model->location_settings;
 
-        // 1) Find known locations 1st
-        $existingLocations = Location
-            ::inRange(
+        try {
+            return static::get(
                 $location->coords,
                 $locationSettings->getMaxRange(),
-                $locationSettings->getMinRange()
-            )
-            ->whereNotIn('id', $reservedIds)
-            ->get();
+                $locationSettings->getMinRange(),
+                $locationSettings->getAllowedTypes(),
+                $notIds
+            );
+        } catch (\InvalidArgumentException $e) {
+            throw stristr($e->getMessage(), 'Could not find any locations within') ?
+                new \Exception("{$e->getMessage()} for Agency Case [{$agencyCase->nameForDebug()}], for model [{$model->nameForDebug()}]") :
+                $e;
+        }
+    }
+
+    public static function get(
+        Point $center,
+        int $maxRangeMeters,
+        int $minRangeMeters = 0,
+        array $allowedTypes = [],
+        array $notIds = []
+    ): Location {
+        // 1) Find known locations 1st
+        $query = Location::inRange($center, $maxRangeMeters, $minRangeMeters);
+        if ($notIds) {
+            $query->whereNotIn('id', $notIds);
+        }
+        $existingLocations = $query->get();
 
         if ($existingLocations->count()) {
             return $existingLocations->random();
@@ -44,11 +63,11 @@ class LocationManager
         $attempts = 0;
         do {
             $locations = static::findLocations(
-                $location->coords,
-                $locationSettings->getMaxRange(),
-                $locationSettings->getMinRange(),
-                $locationSettings->getAllowedTypes(),
-                $reservedIds->all()
+                $center,
+                $maxRangeMeters,
+                $minRangeMeters,
+                $allowedTypes,
+                $notIds
             );
             if ($locations->count()) {
                 return $locations->random();
@@ -56,7 +75,7 @@ class LocationManager
             $attempts++;
         } while($attempts < 10);
 
-        throw new \Exception("Could not find any locations for Agency Case [{$agencyCase->nameForDebug()}], for model [{$forModel->nameForDebug()}]");
+        throw new \InvalidArgumentException("Could not find any locations within {$minRangeMeters}-{$maxRangeMeters}m of {$center->toJson()}");
     }
 
     /**
@@ -68,8 +87,8 @@ class LocationManager
     public static function getSpawnCenterLocation(AgencyCase $agencyCase, CaseNoireModel $forModel): Location
     {
         $locationSettings = $forModel->location_settings;
-        $centerType = $locationSettings->getSpawnCenterAtType();
-        $centerName = $locationSettings->getSpawnCenterAtTypeName();
+        $centerType = $locationSettings->getSpawnAtClass();
+        $centerName = $locationSettings->getSpawnAtName();
 
         if ($centerType == AgencyCase::class) {
             $centerModel = $agencyCase;
@@ -92,7 +111,7 @@ class LocationManager
             if ($centerName) {
                 $center .= " $centerName";
             }
-            throw new \InvalidArgumentException("Case [{$agencyCase->nameForDebug()}] does not have required center [$center] for a location");
+            throw new \InvalidArgumentException("Case {$agencyCase->nameForDebug()}, model {$forModel->nameForDebug()} does not have required center [$center] for a location");
         }
 
         /** @var HasLocation $centerModel */
@@ -123,7 +142,7 @@ class LocationManager
 
         $locations = [];
         foreach ($blueprints as $blueprint) {
-            $existingLocation = $blueprint->getExistingModel();
+            $existingLocation = $blueprint->findExistingModel();
             if ($existingLocation) {
                 // existing location is not reserved -> use it
                 if (!in_array($existingLocation->id, $reservedIds)) {
@@ -147,7 +166,7 @@ class LocationManager
         $centerLat = deg2rad($center->getLat());
         $centerLng = deg2rad($center->getLng());
 
-        $distanceDividedByEarthRadius = $distance / Location::EARTH_RADIUS_IN_M;
+        $distanceDividedByEarthRadius = $distance / Location::$EARTH_RADIUS_IN_M;
 
         $randomLat = rad2deg(asin(
             sin($centerLat) * cos($distanceDividedByEarthRadius) +
@@ -161,8 +180,19 @@ class LocationManager
         return new Point($randomLat, $randomLng);
     }
 
-    public static function getDistanceInMeters(Point $from, Point $to): int
+    /**
+     * @param Location|Point $from
+     * @param Location|Point $to
+     * @return int
+     */
+    public static function getDistanceInMeters($from, $to): int
     {
+        if (isset($from->coords)) {
+            $from = $from->coords;
+        }
+        if (isset($to->coords)) {
+            $to = $to->coords;
+        }
         $lat1 = $from->getLat();
         $lat2 = $to->getLat();
         $lng1 = $from->getLng();

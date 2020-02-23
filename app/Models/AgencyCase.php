@@ -6,6 +6,7 @@ use App\Models\Common\CaseNoireModel;
 use App\Models\Common\CreatesInstances;
 use App\Models\Common\HasLocation;
 use App\Models\Common\IsPartOfCase;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -62,13 +63,18 @@ class AgencyCase extends CaseNoireModel
         'data',
     ];
 
+    protected $casts = [
+        'data' => 'array',
+    ];
+
+    public function nameForDebug(): string
+    {
+        $name = $this->caseTemplate->name ?? '´CaseTemplate missing´';
+        return "$name [ID $this->id]";
+    }
+
     public function agency(): BelongsTo
     {
         return $this->belongsTo(Agency::class);
-    }
-
-    public function locations(): BelongsToMany
-    {
-        return $this->belongsToMany(Location::class, ModelInstance::table());
     }
 }

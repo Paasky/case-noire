@@ -10,7 +10,7 @@ interface BlueprintInterface
     /**
      * @return CaseNoireModel|null
      */
-    public function getExistingModel();
+    public function findExistingModel();
     public function getSearchParams(): array;
     public function isValid(bool $verify = false): bool;
 }

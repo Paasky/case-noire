@@ -16,7 +16,7 @@ abstract class CaseNoireModel extends Model
     public function nameForDebug(): string
     {
         $name = $this->name ?? '';
-        $name .= ($name ? ' ' : '') . "ID {$this->getKey()}";
+        $name .= ($name ? ' ' : '') . "[ID {$this->getKey()}]";
         return $name;
     }
 

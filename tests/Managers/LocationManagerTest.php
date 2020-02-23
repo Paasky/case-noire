@@ -6,7 +6,6 @@ use App\Locations\LocationSettings;
 use App\Managers\LocationManager;
 use App\Managers\SystemManager;
 use App\Models\Clue;
-use App\Models\ModelInstance;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -29,29 +28,24 @@ class LocationManagerTest extends TestCase
     public function testGetRandomPoint()
     {
         $center = new Point(-0.064937, 51.50819);
-        $distances = [];
 
-        $maxRange = 10;
+        $maxRange = 1;
         $minRange = 0;
+        $distances = 0;
         do {
-            $distances[] = $this->runRandomPointDistance($center, $maxRange, $minRange);
-        } while (count($distances) < 100);
+            $distance = $this->runRandomPointDistance($center, $maxRange, $minRange);
+            $this::assertTrue($distance >= 0 && $distance <= 1, "distance $distance between 0 & 1");
+            $distances++;
+        } while ($distances < 100);
 
-        // avg should be 5, allow for +/-1 (10%) variance
-        $avg = array_sum($distances) / count($distances);
-        $this::assertTrue($avg > 4 && $avg < 6, "avg $avg between 4 & 6");
-
-
-        $distances = [];
-        $maxRange = 100;
-        $minRange = 50;
+        $maxRange = 1000;
+        $minRange = 999;
+        $distances = 0;
         do {
-            $distances[] = $this->runRandomPointDistance($center, $maxRange, $minRange);
-        } while (count($distances) < 100);
-
-        // avg should be 75, allow for +/-5 (10%) variance
-        $avg = array_sum($distances) / count($distances);
-        $this::assertTrue($avg > 70 && $avg < 80, "avg $avg between 70 & 80");
+            $distance = $this->runRandomPointDistance($center, $maxRange, $minRange);
+            $this::assertTrue($distance >= 999 && $distance <= 1000, "distance $distance between 999 & 1000");
+            $distances++;
+        } while ($distances < 100);
     }
 
     private function runRandomPointDistance(Point $center, int $maxRange, int $minRange): int
@@ -59,12 +53,8 @@ class LocationManagerTest extends TestCase
         $randomPoint = LocationManager::getRandomPoint($center, $maxRange, $minRange);
         $distance = LocationManager::getDistanceInMeters($center, $randomPoint);
         $this::assertTrue(
-            $maxRange >= $distance,
-            "maxRange $maxRange >= distance $distance"
-        );
-        $this::assertTrue(
-            $minRange <= $distance,
-            "minRange $minRange <= distance $distance"
+            $distance <= $maxRange && $distance >= $minRange,
+            "distance $distance between $minRange & $maxRange"
         );
 
         return $distance;
@@ -127,7 +117,7 @@ class LocationManagerTest extends TestCase
         $unusedLocation->save();
 
         // Get Location for Clue
-        $clueLocation = LocationManager::get($agencyCase, $clue);
+        $clueLocation = LocationManager::getForCaseModel($agencyCase, $clue);
 
         // Make sure not same Location as AgencyCase
         $this::assertNotEquals($caseLocation->id, $clueLocation->id, "caseLocation->id != clueLocation");
@@ -142,7 +132,7 @@ class LocationManagerTest extends TestCase
         $agencyCase->refresh();
 
         // Get Location for Person
-        $personLocation = LocationManager::get($agencyCase, $person);
+        $personLocation = LocationManager::getForCaseModel($agencyCase, $person);
 
         // Make sure not same Location as AgencyCase or Person
         $this::assertNotEquals($caseLocation->id, $personLocation->id, "caseLocation->id != personLocation");

@@ -22,4 +22,12 @@ class CaseConst
     ];
 
     const STATUS_OPEN = 'open';
+    const STATUS_CLOSED = 'closed';
+    const STATUSES = [
+        self::STATUS_OPEN,
+        self::STATUS_CLOSED,
+    ];
+
+    const CASE_OPEN_MAX_RANGE = 1000;
+    const CASE_OPEN_MIN_RANGE = 500;
 }

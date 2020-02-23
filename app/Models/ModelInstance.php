@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Common\CaseNoireModel;
+use App\Models\Common\HasCoordinates;
 use App\Models\Common\HasLocation;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -38,16 +39,23 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class ModelInstance extends CaseNoireModel
 {
-    use HasLocation;
+    use HasLocation, HasCoordinates;
 
     protected $fillable = [
         'agency_case_id',
         'location_id',
         'model_id',
         'model_type',
+        'coords',
         'status',
         'data',
     ];
+
+    public function save(array $options = [])
+    {
+        $this->setLatLngOnSave();
+        return parent::save($options);
+    }
 
     public function agencyCase(): BelongsTo
     {
