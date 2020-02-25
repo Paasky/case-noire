@@ -60,7 +60,37 @@ class LocationManagerTest extends TestCase
         return $distance;
     }
 
-    public function testGetSpawnCenter()
+    public function testGetCenterModel()
+    {
+        // 1) Spawn center is AgencyCase
+        $caseTemplate = $this->caseTemplate();
+        $clue = $this->clue($caseTemplate);
+
+        $clue->location_settings = new LocationSettings();
+        $clue->save();
+        $agencyCase = $this->agencyCase(null, $caseTemplate);
+        $agencyCase->save();
+        $agencyCase->clues()->save($clue);
+
+        $centerModel = LocationManager::getCenterModel($agencyCase, $clue);
+        $this::assertEquals(get_class($agencyCase), get_class($centerModel), 'Center Model Classes match');
+        $this::assertEquals($agencyCase->id, $centerModel->id, 'Center Model IDs match');
+
+        // 2) Spawn center is the Clue
+        $person = $this->person($caseTemplate);
+        $person->location_settings = new LocationSettings([
+            'spawnCenterAtType' => Clue::class,
+            'spawnCenterAtTypeName' => $clue->name,
+        ]);
+        $person->save();
+        $agencyCase->persons()->save($person);
+
+        $centerModel = LocationManager::getCenterModel($agencyCase, $person, true);
+        $this::assertEquals(get_class($clue), $centerModel->model_type, 'Center Model Classes match');
+        $this::assertEquals($clue->id, $centerModel->model_id, 'Center Model IDs match');
+    }
+
+    public function testGetCenterLocation()
     {
         // 1) Spawn center is AgencyCase
         $caseTemplate = $this->caseTemplate();
@@ -72,8 +102,9 @@ class LocationManagerTest extends TestCase
         $agencyCase = $this->agencyCase(null, $caseTemplate);
         $agencyCase->save();
 
-        $clueLocation = LocationManager::getSpawnCenterLocation($agencyCase, $clue);
+        $clueLocation = LocationManager::getCenterLocation($agencyCase);
         $this::assertEquals($agencyCase->location->id, $clueLocation->id, 'Spawn Location IDs match');
+
 
         // Set center for clue instance
         $agencyCase->clues()->save($clue, ['location_id' => $clueLocation->id]);
@@ -87,7 +118,7 @@ class LocationManagerTest extends TestCase
         $person->save();
         $agencyCase->persons()->save($person);
 
-        $personLocation = LocationManager::getSpawnCenterLocation($agencyCase, $person);
+        $personLocation = LocationManager::getCenterLocation($agencyCase->getInstanceOf($clue));
         $this::assertEquals($clueLocation->id, $personLocation->id, 'Spawn Location IDs match');
     }
 
@@ -113,7 +144,7 @@ class LocationManagerTest extends TestCase
         $agencyCase->save();
 
         // Create Location in range for both Clue & Person
-        $unusedLocation = $this->location(LocationManager::getRandomPoint($caseLocation->coords, 100));
+        $unusedLocation = $this->location(LocationManager::getRandomPoint($caseLocation->coords, 90));
         $unusedLocation->save();
 
         // Get Location for Clue

@@ -21,14 +21,18 @@ class LocationManager
      */
     public static function getForCaseModel(AgencyCase $agencyCase, CaseNoireModel $model): Location
     {
-        $location = static::getSpawnCenterLocation($agencyCase, $model);
-
-        $notIds = $agencyCase->locations->pluck('id')->add($agencyCase->location_id)->all();
         $locationSettings = $model->location_settings;
+        $centerModel = static::getCenterModel($agencyCase, $model, true);
+        $centerLocation = static::getCenterLocation($centerModel);
+
+        $notIds = $agencyCase->locations->pluck('id')
+            ->add($agencyCase->location_id)
+            ->diff([$centerLocation->id]) // allow spawning on the center location
+            ->all();
 
         try {
             return static::get(
-                $location->coords,
+                $centerLocation->coords,
                 $locationSettings->getMaxRange(),
                 $locationSettings->getMinRange(),
                 $locationSettings->getAllowedTypes(),
@@ -39,6 +43,65 @@ class LocationManager
                 new \Exception("{$e->getMessage()} for Agency Case [{$agencyCase->nameForDebug()}], for model [{$model->nameForDebug()}]") :
                 $e;
         }
+    }
+
+    /**
+     * @param AgencyCase $agencyCase
+     * @param CaseNoireModel $forModel
+     * @param bool $orFail
+     * @return CaseNoireModel|HasLocation|null
+     */
+    public static function getCenterModel(AgencyCase $agencyCase, CaseNoireModel $forModel, bool $orFail = false): ?CaseNoireModel
+    {
+        $locationSettings = $forModel->location_settings;
+        $centerType = $locationSettings->getSpawnAtClass();
+        $centerName = $locationSettings->getSpawnAtName();
+
+        if ($centerType == AgencyCase::class) {
+            $centerModel = $agencyCase;
+        } else {
+            foreach ($agencyCase->modelInstances->where('model_type', $centerType) as $modelInstance) {
+                if (!$centerName) {
+                    $centerModel = $modelInstance;
+                    break;
+                }
+                if ($centerName == $modelInstance->model->name ?? null) {
+                    $centerModel = $modelInstance;
+                    break;
+                }
+            }
+        }
+
+        if (isset($centerModel)) {
+            return $centerModel;
+        }
+
+        if ($orFail) {
+            $center = $centerType;
+            if ($centerName) {
+                $center .= " $centerName";
+            }
+            throw new \InvalidArgumentException("Case {$agencyCase->nameForDebug()}, model {$forModel->nameForDebug()} does not have required center [$center] for a location");
+        }
+
+        return null;
+    }
+
+    /**
+     * @param CaseNoireModel|HasLocation $centerModel
+     * @return Location
+     * @throws \Exception
+     */
+    public static function getCenterLocation(CaseNoireModel $centerModel): Location
+    {
+        if (!isset($centerModel->location)) {
+            throw new \InvalidArgumentException("Required center model [{$centerModel->nameForDebug()}] does not have a location");
+        }
+        if (!isset($centerModel->location->coords)) {
+            throw new \InvalidArgumentException("Required center model [{$centerModel->nameForDebug()}] location does not have coordinates");
+        }
+
+        return $centerModel->location;
     }
 
     public static function get(
@@ -72,54 +135,11 @@ class LocationManager
             if ($locations->count()) {
                 return $locations->random();
             }
+
             $attempts++;
         } while($attempts < 10);
 
         throw new \InvalidArgumentException("Could not find any locations within {$minRangeMeters}-{$maxRangeMeters}m of {$center->toJson()}");
-    }
-
-    /**
-     * @param AgencyCase $agencyCase
-     * @param CaseNoireModel|HasAndSpawnsInstances $forModel
-     * @return Location
-     * @throws \Exception
-     */
-    public static function getSpawnCenterLocation(AgencyCase $agencyCase, CaseNoireModel $forModel): Location
-    {
-        $locationSettings = $forModel->location_settings;
-        $centerType = $locationSettings->getSpawnAtClass();
-        $centerName = $locationSettings->getSpawnAtName();
-
-        if ($centerType == AgencyCase::class) {
-            $centerModel = $agencyCase;
-        } else {
-            foreach ($agencyCase->modelInstances->where('model_type', $centerType) as $modelInstance) {
-                if (!$centerName) {
-                    $centerModel = $modelInstance;
-                    break;
-                }
-                /** @noinspection PhpUndefinedFieldInspection */
-                if ($centerName == $modelInstance->model->name ?? null) {
-                    $centerModel = $modelInstance;
-                    break;
-                }
-            }
-        }
-
-        if (!isset($centerModel)) {
-            $center = $centerType;
-            if ($centerName) {
-                $center .= " $centerName";
-            }
-            throw new \InvalidArgumentException("Case {$agencyCase->nameForDebug()}, model {$forModel->nameForDebug()} does not have required center [$center] for a location");
-        }
-
-        /** @var HasLocation $centerModel */
-        if (!isset($centerModel->location)) {
-            throw new \InvalidArgumentException("Required center model [{$centerModel->nameForDebug()}] does not have a location");
-        }
-
-        return $centerModel->location;
     }
 
     /**
@@ -148,12 +168,19 @@ class LocationManager
                 if (!in_array($existingLocation->id, $reservedIds)) {
                     $locations[] = $existingLocation;
                 }
-                // it's already reserved -> continue to the next found location
                 continue;
             }
 
             // no existing location -> create it
             $locations[] = Location::create($blueprint->getModelParams());
+        }
+
+        // Forget Locations that ended up outside of the range
+        foreach ($locations as $i => $location) {
+            $distance = static::getDistanceInMeters($center, $location);
+            if ($distance < $minRange || $distance > $maxRange) {
+                unset($locations[$i]);
+            }
         }
 
         return collect($locations);

@@ -5,8 +5,6 @@ namespace Tests\Managers;
 use App\Locations\LocationSettings;
 use App\Managers\CaseManager;
 use App\Managers\LocationManager;
-use App\Managers\SystemManager;
-use App\Models\Clue;
 use App\Models\Person;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -18,8 +16,6 @@ class CaseManagerTest extends TestCase
 
     public function testOpen()
     {
-        // todo this test fails most of the time as the locations are too far away/not set
-        return;
         // CaseTemplate with 3 Persons and 5 clues
         // One Person next to Case
         // Two People in 400-600m radius
