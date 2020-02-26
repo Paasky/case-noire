@@ -18,6 +18,9 @@ class CreateAgencyCasesTable extends Migration
             $table->bigInteger('agency_id');
             $table->bigInteger('case_template_id');
             $table->bigInteger('location_id');
+            $table->point('coords')->nullable()->index();
+            $table->float('lat', 13, 10)->nullable()->index();
+            $table->float('lng', 13, 10)->nullable()->index();
             $table->string('status', 255)->index();
             $table->json('data')->nullable();
             $table->timestamps();

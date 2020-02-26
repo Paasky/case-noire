@@ -64,12 +64,6 @@ class Agent extends CaseNoireModel
         'slogan',
     ];
 
-    public function save(array $options = [])
-    {
-        $this->setLatLngOnSave();
-        return parent::save($options);
-    }
-
     public function agencies(): BelongsToMany
     {
         return $this->belongsToMany(Agency::class);

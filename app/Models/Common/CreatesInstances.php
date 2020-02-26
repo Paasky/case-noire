@@ -3,6 +3,7 @@
 
 namespace App\Models\Common;
 
+use App\Managers\LocationManager;
 use App\Models\Clue;
 use App\Models\Conversation;
 use App\Models\Event;
@@ -10,6 +11,7 @@ use App\Models\Evidence;
 use App\Models\Location;
 use App\Models\ModelInstance;
 use App\Models\Person;
+use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -73,6 +75,12 @@ trait CreatesInstances
         return null;
     }
 
+    /**
+     * @param CaseNoireModel|HasInstances|HasAndSpawnsInstances $model
+     * @param Location|null $location
+     * @param array|null $data
+     * @param string|null $status
+     */
     public function setInstanceOf(
         CaseNoireModel $model,
         Location $location = null,
@@ -80,26 +88,16 @@ trait CreatesInstances
         string $status = null
     ) {
         $attributes = [
+            'model_id' => $model->id,
+            'model_type' => get_class($model),
             'location_id' => $location->id ?? null,
             'data' => $data,
             'status' => $status,
         ];
-        switch (get_class($model)) {
-            case Clue::class:
-                $this->clues()->save($model, $attributes);
-                break;
-            case Conversation::class:
-                $this->conversations()->save($model, $attributes);
-                break;
-            case Event::class:
-                $this->events()->save($model, $attributes);
-                break;
-            case Evidence::class:
-                $this->evidences()->save($model, $attributes);
-                break;
-            case Person::class:
-                $this->persons()->save($model, $attributes);
-                break;
+        if ($location) {
+            $attributes['coords'] = LocationManager::getCoordsNextToLocation($location);
         }
+        $this->modelInstances()->save(new ModelInstance($attributes));
+        $this->refresh();
     }
 }

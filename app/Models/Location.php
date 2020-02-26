@@ -97,7 +97,6 @@ class Location extends CaseNoireModel
     public function save(array $options = [])
     {
         $this->hash = static::generateHash($this->coords, $this->address);
-        $this->setLatLngOnSave();
         return parent::save($options);
     }
 

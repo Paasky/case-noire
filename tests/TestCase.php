@@ -55,6 +55,7 @@ abstract class TestCase extends BaseTestCase
             'agency_id' => $agency->id,
             'case_template_id' => $caseTemplate->id,
             'location_id' => $location->id,
+            'coords' => $location->coords,
             'status' => CaseConst::STATUS_OPEN,
             'data' => null,
         ]);
@@ -126,7 +127,7 @@ abstract class TestCase extends BaseTestCase
         }
 
         $clue = new Clue([
-            'name' => 'Test Clue',
+            'name' => 'Test Clue ' . rand(1, 9999),
             'description' => null,
             'image_url' => null,
             'case_template_id' => $caseTemplate->id,
@@ -327,6 +328,12 @@ abstract class TestCase extends BaseTestCase
         $evidence = $this->evidence($caseTemplate);
         $person = $this->person($caseTemplate);
 
+        $clue->save();
+        $conversation->save();
+        $event->save();
+        $evidence->save();
+        $person->save();
+
         $model->setInstanceOf($clue);
         $model->setInstanceOf($conversation);
         $model->setInstanceOf($event);
@@ -463,10 +470,11 @@ abstract class TestCase extends BaseTestCase
     {
         $coords = new Point(10,20);
         $model->coords = $coords;
-        $model->save();
         $this::assertEquals($coords, $model->coords);
         $this::assertEquals($coords->getLat(), $model->lat);
         $this::assertEquals($coords->getLng(), $model->lng);
+        $model->save();
+        $this::assertEquals($coords, $model->coords);
     }
 
     public static function assertThrows(

@@ -18,6 +18,7 @@ class CaseManager
 {
     public static function open(CaseTemplate $caseTemplate, Agency $agency, Point $coords): AgencyCase
     {
+        // 1) Create AgencyCase
         $caseBlueprint = new AgencyCaseBlueprint(
             $agency,
             $caseTemplate,
@@ -34,36 +35,44 @@ class CaseManager
         }
         $agencyCase = AgencyCase::create($caseBlueprint->getModelParams());
 
-        /** @var Clue[]|Conversation[]|Event[]|Evidence[]|Person[] $modelsToSet */
-        $modelsToSet = $caseTemplate->all_models->all();
+        // 2) Create CaseTemplate Model instances
+        $modelsToSet = $caseTemplate->all_models;
         $setModelsByClassAndName = [];
 
-        // Models can a) not require a location, b) spawn around case or c) spawn around another model
+        // Case models can require each other for spawn locations, so keep looping $modelsToSet until
+        // a) $modelsToSet is empty or
+        // b) Nothing was done, in which case throw an exception as the CaseTemplate is invalid
         do {
             $somethingWasDone = false;
+
+            // Models can
+            // a) spawn around case or
+            // b) spawn around another model
+            // c) not have a location
             foreach ($modelsToSet as $i => $model) {
-                // a) No location
                 $hasLocation = isset($model->location_settings) && $model->location_settings->isMustSpawn();
 
-                // b) Has location, center is the case
-                $caseIsCenter = $hasLocation ?
-                    $model->location_settings->getSpawnAtClass() == AgencyCase::class :
-                    false;
+                // a) Has location & spawn at the case
+                $caseIsCenter = $hasLocation && $model->location_settings->getSpawnAtClass() == AgencyCase::class;
 
-                // c) Has location, center is another model
+                // b) Has location & center is another model
                 if ($hasLocation && !$caseIsCenter) {
                     $reqClassAndName =
                         "{$model->location_settings->getSpawnAtClass()}_" .
                         "{$model->location_settings->getSpawnAtName()}";
                     $requiredClassIsSet = isset($setModelsByClassAndName[$reqClassAndName]);
+                } else {
+                    $requiredClassIsSet = false;
                 }
 
-                // if a, b, or c is true, set the instance
-                if (!$hasLocation || $caseIsCenter || ($requiredClassIsSet ?? null)) {
-                    $location = $hasLocation ?
-                        LocationManager::getForCaseModel($agencyCase, $model) :
-                        null;
-                    $agencyCase->setInstanceOf($model, $location);
+                // If a, b, or c is true, set the instance
+                if ($caseIsCenter || $requiredClassIsSet || !$hasLocation) {
+                    if ($hasLocation) {
+                        $location = LocationManager::getForCaseModel($agencyCase, $model);
+                    }
+                    $agencyCase->setInstanceOf($model, $location ?? null);
+
+                    // This model has now been set & something was indeed done
                     unset($modelsToSet[$i]);
                     $setModelsByClassAndName[get_class($model) . "_{$model->name}"] = true;
                     $somethingWasDone = true;
@@ -71,9 +80,9 @@ class CaseManager
             }
 
             if (!$somethingWasDone) {
-                throw new \InvalidArgumentException("Invalid CaseTemplate configuration, could not instantiate any models: ". json_encode($modelsToSet));
+                throw new \InvalidArgumentException("Invalid CaseTemplate configuration, could not instantiate any of these models: ". json_encode($modelsToSet));
             }
-        } while ($modelsToSet);
+        } while ($modelsToSet->count());
 
         $agencyCase->refresh();
         return $agencyCase;

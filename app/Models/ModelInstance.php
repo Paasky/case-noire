@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Common\CaseNoireModel;
 use App\Models\Common\HasCoordinates;
+use App\Models\Common\HasInstances;
 use App\Models\Common\HasLocation;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -22,7 +23,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\AgencyCase $agencyCase
  * @property-read \App\Models\Location|null $location
- * @property-read \App\Models\ModelInstance $model
+ * @property-read CaseNoireModel|HasInstances $model
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ModelInstance newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ModelInstance newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\ModelInstance query()
@@ -51,10 +52,13 @@ class ModelInstance extends CaseNoireModel
         'data',
     ];
 
-    public function save(array $options = [])
+    public $spatialFields = [
+        'coords',
+    ];
+
+    public function nameForDebug(): string
     {
-        $this->setLatLngOnSave();
-        return parent::save($options);
+        return "ModelInstance [ID $this->id] (of {$this->model->nameForDebug()})";
     }
 
     public function agencyCase(): BelongsTo

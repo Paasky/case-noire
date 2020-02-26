@@ -6,6 +6,7 @@ use App\Locations\Geolocator;
 use App\Models\AgencyCase;
 use App\Models\Common\CaseNoireModel;
 use App\Models\Common\HasAndSpawnsInstances;
+use App\Models\Common\HasCoordinates;
 use App\Models\Common\HasLocation;
 use App\Models\Location;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
@@ -32,7 +33,7 @@ class LocationManager
 
         try {
             return static::get(
-                $centerLocation->coords,
+                $centerModel->coords,
                 $locationSettings->getMaxRange(),
                 $locationSettings->getMinRange(),
                 $locationSettings->getAllowedTypes(),
@@ -47,9 +48,9 @@ class LocationManager
 
     /**
      * @param AgencyCase $agencyCase
-     * @param CaseNoireModel $forModel
+     * @param CaseNoireModel|HasAndSpawnsInstances $forModel
      * @param bool $orFail
-     * @return CaseNoireModel|HasLocation|null
+     * @return CaseNoireModel|HasLocation|HasCoordinates|null
      */
     public static function getCenterModel(AgencyCase $agencyCase, CaseNoireModel $forModel, bool $orFail = false): ?CaseNoireModel
     {
@@ -73,6 +74,13 @@ class LocationManager
         }
 
         if (isset($centerModel)) {
+            if (!isset($centerModel->coords)) {
+                throw new \InvalidArgumentException(
+                    "Required center model " .
+                    "{$centerModel->nameForDebug()} does not have coordinates, required by " .
+                    "{$forModel->nameForDebug()}"
+                );
+            }
             return $centerModel;
         }
 
@@ -102,6 +110,11 @@ class LocationManager
         }
 
         return $centerModel->location;
+    }
+
+    public static function getCoordsNextToLocation(Location $location): Point
+    {
+        return static::getRandomPoint($location->coords, 3, 1);
     }
 
     public static function get(
@@ -193,7 +206,7 @@ class LocationManager
         $centerLat = deg2rad($center->getLat());
         $centerLng = deg2rad($center->getLng());
 
-        $distanceDividedByEarthRadius = $distance / Location::$EARTH_RADIUS_IN_M;
+        $distanceDividedByEarthRadius = $distance / Location::$earthRadiusInMeters;
 
         $randomLat = rad2deg(asin(
             sin($centerLat) * cos($distanceDividedByEarthRadius) +

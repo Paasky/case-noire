@@ -24,17 +24,12 @@ trait HasCoordinates
 {
     use SpatialTrait;
 
-    public static $EARTH_RADIUS_IN_M = 6371000;
+    public static $earthRadiusInMeters = 6371000;
+    public static $hasCoords = true;
 
     public $spatialFields = [
         'coords',
     ];
-
-    private function setLatLngOnSave(): void
-    {
-        $this->attributes['lat'] = $this->coords ? $this->coords->getLat() : null;
-        $this->attributes['lng'] = $this->coords ? $this->coords->getLng() : null;
-    }
 
     public static function inRange(Point $center, int $maxRangeMeters, int $minRangeMeters = 0, Builder &$query = null): Builder
     {
@@ -47,7 +42,7 @@ trait HasCoordinates
 
     public static function radiusExpression(Point $center, float $maxRadiusM, float $minRadiusM = null): Expression
     {
-        $earthRadiusM = (int) self::$EARTH_RADIUS_IN_M;
+        $earthRadiusM = (int) self::$earthRadiusInMeters;
         $centerLat = (float) $center->getLat();
         $centerLng = (float) $center->getLng();
 
@@ -75,6 +70,13 @@ trait HasCoordinates
             "cos(radians($centerLat)) * cos(radians(lat)) * cos(radians(lng) - radians($centerLng)) +" .
             "sin(radians($centerLat)) * sin(radians(lat))" .
         ") $distanceLimit");
+    }
+
+    public function setCoordsAttribute(?Point $coords): void
+    {
+        $this->attributes['coords'] = $coords;
+        $this->attributes['lat'] = $coords ? $coords->getLat() : null;
+        $this->attributes['lng'] = $coords ? $coords->getLng() : null;
     }
 
     public function setLatAttribute($lat): void

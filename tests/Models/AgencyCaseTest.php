@@ -22,5 +22,6 @@ class AgencyCaseTest extends TestCase
         $this->verifyIsPartOfCase($agencyCase);
         $this->verifyCreatesInstances($agencyCase);
         $this->verifyHasLocation($agencyCase);
+        $this->verifyHasCoordinates($agencyCase);
     }
 }

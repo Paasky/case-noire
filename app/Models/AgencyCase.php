@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Common\CaseNoireModel;
 use App\Models\Common\CreatesInstances;
+use App\Models\Common\HasCoordinates;
 use App\Models\Common\HasLocation;
 use App\Models\Common\IsPartOfCase;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -53,12 +54,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class AgencyCase extends CaseNoireModel
 {
-    use IsPartOfCase, CreatesInstances, HasLocation;
+    use IsPartOfCase, CreatesInstances, HasLocation, HasCoordinates;
 
     protected $fillable = [
         'agency_id',
         'case_template_id',
         'location_id',
+        'coords',
         'status',
         'data',
     ];
@@ -69,8 +71,8 @@ class AgencyCase extends CaseNoireModel
 
     public function nameForDebug(): string
     {
-        $name = $this->caseTemplate->name ?? '´CaseTemplate missing´';
-        return "$name [ID $this->id]";
+        $name = $this->caseTemplate->name ?? '-CaseTemplate missing-';
+        return "AgencyCase $name [ID $this->id]";
     }
 
     public function agency(): BelongsTo

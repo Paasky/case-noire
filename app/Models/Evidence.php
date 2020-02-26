@@ -18,7 +18,6 @@ use Illuminate\Support\Collection;
  * @property string $name
  * @property string|null $description
  * @property string|null $image_url
- * @property string $location_settings
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\AgencyCase[] $agencyCases

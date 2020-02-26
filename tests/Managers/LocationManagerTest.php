@@ -70,11 +70,12 @@ class LocationManagerTest extends TestCase
         $clue->save();
         $agencyCase = $this->agencyCase(null, $caseTemplate);
         $agencyCase->save();
-        $agencyCase->clues()->save($clue);
 
         $centerModel = LocationManager::getCenterModel($agencyCase, $clue);
         $this::assertEquals(get_class($agencyCase), get_class($centerModel), 'Center Model Classes match');
         $this::assertEquals($agencyCase->id, $centerModel->id, 'Center Model IDs match');
+
+        $agencyCase->setInstanceOf($clue, $centerModel->location);
 
         // 2) Spawn center is the Clue
         $person = $this->person($caseTemplate);
@@ -83,7 +84,6 @@ class LocationManagerTest extends TestCase
             'spawnCenterAtTypeName' => $clue->name,
         ]);
         $person->save();
-        $agencyCase->persons()->save($person);
 
         $centerModel = LocationManager::getCenterModel($agencyCase, $person, true);
         $this::assertEquals(get_class($clue), $centerModel->model_type, 'Center Model Classes match');

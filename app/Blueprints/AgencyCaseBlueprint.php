@@ -3,6 +3,7 @@
 namespace App\Blueprints;
 
 use App\Constants\CaseConst;
+use App\Managers\LocationManager;
 use App\Models\Agency;
 use App\Models\AgencyCase;
 use App\Models\CaseTemplate;
@@ -42,6 +43,7 @@ class AgencyCaseBlueprint implements BlueprintInterface
             'agency_id' => $this->agency->id,
             'case_template_id' => $this->caseTemplate->id,
             'location_id' => $this->location->id,
+            'coords' => LocationManager::getCoordsNextToLocation($this->location),
             'status' => $this->status ?: null,
             'data' => $this->data ?: null,
         ];
@@ -91,5 +93,95 @@ class AgencyCaseBlueprint implements BlueprintInterface
             return false;
         }
         return true;
+    }
+
+    /**
+     * @return Agency
+     */
+    public function getAgency(): Agency
+    {
+        return $this->agency;
+    }
+
+    /**
+     * @param Agency $agency
+     * @return AgencyCaseBlueprint
+     */
+    public function setAgency(Agency $agency): AgencyCaseBlueprint
+    {
+        $this->agency = $agency;
+        return $this;
+    }
+
+    /**
+     * @return CaseTemplate
+     */
+    public function getCaseTemplate(): CaseTemplate
+    {
+        return $this->caseTemplate;
+    }
+
+    /**
+     * @param CaseTemplate $caseTemplate
+     * @return AgencyCaseBlueprint
+     */
+    public function setCaseTemplate(CaseTemplate $caseTemplate): AgencyCaseBlueprint
+    {
+        $this->caseTemplate = $caseTemplate;
+        return $this;
+    }
+
+    /**
+     * @return Location
+     */
+    public function getLocation(): Location
+    {
+        return $this->location;
+    }
+
+    /**
+     * @param Location $location
+     * @return AgencyCaseBlueprint
+     */
+    public function setLocation(Location $location): AgencyCaseBlueprint
+    {
+        $this->location = $location;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param string $status
+     * @return AgencyCaseBlueprint
+     */
+    public function setStatus(string $status): AgencyCaseBlueprint
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getData(): array
+    {
+        return $this->data;
+    }
+
+    /**
+     * @param array $data
+     * @return AgencyCaseBlueprint
+     */
+    public function setData(array $data): AgencyCaseBlueprint
+    {
+        $this->data = $data;
+        return $this;
     }
 }
