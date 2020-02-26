@@ -7,11 +7,9 @@ use App\Constants\CaseConst;
 use App\Models\Agency;
 use App\Models\AgencyCase;
 use App\Models\CaseTemplate;
-use App\Models\Clue;
-use App\Models\Conversation;
-use App\Models\Event;
-use App\Models\Evidence;
-use App\Models\Person;
+use App\Models\Common\CaseNoireModel;
+use App\Models\Common\HasAndSpawnsInstances;
+use App\Models\Common\HasInstances;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 
 class CaseManager
@@ -45,34 +43,8 @@ class CaseManager
         do {
             $somethingWasDone = false;
 
-            // Models can
-            // a) spawn around case or
-            // b) spawn around another model
-            // c) not have a location
             foreach ($modelsToSet as $i => $model) {
-                $hasLocation = isset($model->location_settings) && $model->location_settings->isMustSpawn();
-
-                // a) Has location & spawn at the case
-                $caseIsCenter = $hasLocation && $model->location_settings->getSpawnAtClass() == AgencyCase::class;
-
-                // b) Has location & center is another model
-                if ($hasLocation && !$caseIsCenter) {
-                    $reqClassAndName =
-                        "{$model->location_settings->getSpawnAtClass()}_" .
-                        "{$model->location_settings->getSpawnAtName()}";
-                    $requiredClassIsSet = isset($setModelsByClassAndName[$reqClassAndName]);
-                } else {
-                    $requiredClassIsSet = false;
-                }
-
-                // If a, b, or c is true, set the instance
-                if ($caseIsCenter || $requiredClassIsSet || !$hasLocation) {
-                    if ($hasLocation) {
-                        $location = LocationManager::getForCaseModel($agencyCase, $model);
-                    }
-                    $agencyCase->setInstanceOf($model, $location ?? null);
-
-                    // This model has now been set & something was indeed done
+                if (static::setModelToCaseIfCan($agencyCase, $model, $setModelsByClassAndName)) {
                     unset($modelsToSet[$i]);
                     $setModelsByClassAndName[get_class($model) . "_{$model->name}"] = true;
                     $somethingWasDone = true;
@@ -86,5 +58,45 @@ class CaseManager
 
         $agencyCase->refresh();
         return $agencyCase;
+    }
+
+    /**
+     * @param AgencyCase $agencyCase
+     * @param CaseNoireModel|HasInstances|HasAndSpawnsInstances $model
+     * @param array $setModelsByClassAndName
+     * @return bool
+     * @throws \Exception
+     */
+    protected static function setModelToCaseIfCan(AgencyCase &$agencyCase, CaseNoireModel $model, array $setModelsByClassAndName): bool
+    {
+        // Models can
+        // a) spawn around case or
+        // b) spawn around another model
+        // c) not have a location
+        $hasLocation = isset($model->location_settings) && $model->location_settings->isMustSpawn();
+
+        // a) Has location & spawn at the case
+        $caseIsCenter = $hasLocation && $model->location_settings->getSpawnAtClass() == AgencyCase::class;
+
+        // b) Has location & center is another model
+        if ($hasLocation && !$caseIsCenter) {
+            $reqClassAndName =
+                "{$model->location_settings->getSpawnAtClass()}_" .
+                "{$model->location_settings->getSpawnAtName()}";
+            $requiredClassIsSet = isset($setModelsByClassAndName[$reqClassAndName]);
+        } else {
+            $requiredClassIsSet = false;
+        }
+
+        // If a, b, or c is true, set the instance
+        if ($caseIsCenter || $requiredClassIsSet || !$hasLocation) {
+            if ($hasLocation) {
+                $location = LocationManager::getForCaseModel($agencyCase, $model);
+            }
+            $agencyCase->setInstanceOf($model, $location ?? null);
+            return true;
+        }
+
+        return false;
     }
 }
