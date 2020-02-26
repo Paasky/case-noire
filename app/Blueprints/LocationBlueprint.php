@@ -2,6 +2,7 @@
 
 namespace App\Blueprints;
 
+use App\Managers\ValidationManager;
 use App\Models\Location;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 
@@ -57,10 +58,10 @@ class LocationBlueprint implements BlueprintInterface
             'lng' => $this->coords->getLng(),
             'type' => $this->type,
             'address' => $this->address,
-            'name' => $this->name,
-            'description' => $this->description,
-            'image_url' => $this->imageUrl,
-            'link' => $this->link,
+            'name' => $this->name ?: null,
+            'description' => $this->description ?: null,
+            'image_url' => $this->imageUrl ?: null,
+            'link' => $this->link ?: null,
         ];
     }
 
@@ -79,7 +80,40 @@ class LocationBlueprint implements BlueprintInterface
     {
         $errors = [];
 
-        // TODO: Implement isValid() method.
+        if (!$this->source) {
+            $errors[] = "source cannot be empty";
+        } elseif (!in_array($this->source, Location::SOURCES, true)) {
+            $errors[] = "`$this->source` is not a valid source";
+        }
+
+        if (!$this->sourceId) {
+            $errors[] = "sourceId cannot be empty";
+        }
+
+        if (!$this->type) {
+            $errors[] = "type cannot be empty";
+        } elseif (!in_array($this->type, Location::TYPES, true)) {
+            $errors[] = "`$this->type` is not a valid type";
+        }
+
+        if (!$this->coords) {
+            $errors[] = "coords cannot be empty";
+        }
+        if (!$this->coords->getLat() && !$this->coords->getLng()) {
+            $errors[] = "coords cannot be [0, 0]";
+        }
+
+        if (!$this->address) {
+            $errors[] = "address cannot be empty";
+        }
+
+        if ($this->imageUrl && !ValidationManager::isUrl($this->imageUrl)) {
+            $errors[] = "imageUrl `$this->imageUrl` is not a valid url";
+        }
+
+        if ($this->link && !ValidationManager::isUrl($this->link)) {
+            $errors[] = "link `$this->link` is not a valid url";
+        }
 
         if ($errors) {
             if ($verify) {
