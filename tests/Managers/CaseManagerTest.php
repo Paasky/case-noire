@@ -123,28 +123,28 @@ class CaseManagerTest extends TestCase
 
         // Found Locations may be some way away from random point, so allow +/- 200m deviation
 
-        $distance = LocationManager::getDistanceInMeters($caseCoords, $person1instance->location);
+        $distance = LocationManager::getDistanceInMeters($caseCoords, $person1instance->coords);
         $this::assertTrue($distance >= 0 && $distance <= 10, "Person 1 is 0-10m from case ($distance)");
 
-        $distance = LocationManager::getDistanceInMeters($caseCoords, $person2instance->location);
+        $distance = LocationManager::getDistanceInMeters($caseCoords, $person2instance->coords);
         $this::assertTrue($distance >= 400 && $distance <= 600, "Person 2 is 400-600m from case ($distance)");
 
-        $distance = LocationManager::getDistanceInMeters($caseCoords, $person3instance->location);
+        $distance = LocationManager::getDistanceInMeters($caseCoords, $person3instance->coords);
         $this::assertTrue($distance >= 400 && $distance <= 600, "Person 3 is 400-600m from case ($distance)");
 
-        $distance = LocationManager::getDistanceInMeters($person1instance->location, $clue1instance->location);
+        $distance = LocationManager::getDistanceInMeters($person1instance->coords, $clue1instance->coords);
         $this::assertTrue($distance >= 0 && $distance <= 10, "Clue 1 is 0-10m from Person 1 ($distance)");
 
-        $distance = LocationManager::getDistanceInMeters($person2instance->location, $clue2instance->location);
+        $distance = LocationManager::getDistanceInMeters($person2instance->coords, $clue2instance->coords);
         $this::assertTrue($distance >= 0 && $distance <= 10, "Clue 2 is 0-10m from Person 2 ($distance)");
 
-        $distance = LocationManager::getDistanceInMeters($person3instance->location, $clue3instance->location);
+        $distance = LocationManager::getDistanceInMeters($person3instance->coords, $clue3instance->coords);
         $this::assertTrue($distance >= 0 && $distance <= 10, "Clue 3 is 0-10m from Person 3 ($distance)");
 
-        $distance = LocationManager::getDistanceInMeters($caseCoords, $clue4instance->location);
+        $distance = LocationManager::getDistanceInMeters($caseCoords, $clue4instance->coords);
         $this::assertTrue($distance >= 0 && $distance <= 10, "Clue 4 is 0-10m from case ($distance)");
 
-        $distance = LocationManager::getDistanceInMeters($caseCoords, $clue5instance->location);
+        $distance = LocationManager::getDistanceInMeters($caseCoords, $clue5instance->coords);
         $this::assertTrue($distance >= 0 && $distance <= 10, "Clue 5 is 0-10m from case ($distance)");
     }
 }

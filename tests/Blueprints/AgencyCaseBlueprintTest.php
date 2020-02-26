@@ -56,7 +56,7 @@ class AgencyCaseBlueprintTest extends TestCase
         $modelParams = $blueprint->getModelParams();
         $generatedCoords = $modelParams['coords'];
         $distance = LocationManager::getDistanceInMeters($location->coords, $generatedCoords);
-        $this::assertTrue($distance >= 1 && $distance <= 3, 'Generated coords are 1-3m from location');
+        $this::assertTrue($distance >= 1 && $distance <= 3, "Generated coords are 1-3m from location (was $distance)");
 
         $this::assertEquals(
             [

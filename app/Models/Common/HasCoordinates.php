@@ -74,6 +74,9 @@ trait HasCoordinates
 
     public function setCoordsAttribute(?Point $coords): void
     {
+        if ($coords && !$coords->getLat() && !$coords->getLng()) {
+            throw new \InvalidArgumentException('[0,0] coords is invalid');
+        }
         $this->attributes['coords'] = $coords;
         $this->attributes['lat'] = $coords ? $coords->getLat() : null;
         $this->attributes['lng'] = $coords ? $coords->getLng() : null;
