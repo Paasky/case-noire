@@ -3,15 +3,9 @@
 
 namespace App\Models\Common;
 
-use App\Models\AgencyCase;
-use App\Models\Location;
-use App\Models\ModelInstance;
 use Grimzy\LaravelMysqlSpatial\Eloquent\SpatialTrait;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Query\Expression;
 
 /**
@@ -62,14 +56,15 @@ trait HasCoordinates
         $maxLng = $centerLng + rad2deg(asin($maxRadiusM / $earthRadiusM) / cos(deg2rad($centerLat)));
 
         return \DB::raw(
-        // Bounding box
-        "lat between $minLat and $maxLat and lng between $minLng and $maxLng and " .
+            // Bounding box
+            "lat between $minLat and $maxLat and lng between $minLng and $maxLng and " .
 
-        // Radius
-        "$earthRadiusM * acos(" .
-            "cos(radians($centerLat)) * cos(radians(lat)) * cos(radians(lng) - radians($centerLng)) +" .
-            "sin(radians($centerLat)) * sin(radians(lat))" .
-        ") $distanceLimit");
+            // Radius
+            "$earthRadiusM * acos(" .
+                "cos(radians($centerLat)) * cos(radians(lat)) * cos(radians(lng) - radians($centerLng)) +" .
+                "sin(radians($centerLat)) * sin(radians(lat))" .
+            ") $distanceLimit"
+        );
     }
 
     public function setCoordsAttribute(?Point $coords): void
@@ -82,11 +77,13 @@ trait HasCoordinates
         $this->attributes['lng'] = $coords ? $coords->getLng() : null;
     }
 
+    /** @noinspection PhpUnusedParameterInspection */
     public function setLatAttribute($lat): void
     {
         throw new \BadFunctionCallException("lat-attribute is read-only. Set coords to update lat-lng values");
     }
 
+    /** @noinspection PhpUnusedParameterInspection */
     public function setLngAttribute($lng): void
     {
         throw new \BadFunctionCallException("lng-attribute is read-only. Set coords to update lat-lng values");

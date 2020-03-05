@@ -3,7 +3,6 @@
 namespace Tests;
 
 use App\Constants\CaseConst;
-use App\Locations\LocationSettings;
 use App\Models\Agency;
 use App\Models\AgencyCase;
 use App\Models\Agent;
@@ -479,7 +478,7 @@ abstract class TestCase extends BaseTestCase
 
     public static function assertThrows(
         callable $thrownIn,
-        string $message = 'Nothing was thrown',
+        string $outputMessage = 'Nothing was thrown',
         \Throwable $expectedThrowable = null
     ): void {
         $wasThrown = false;
@@ -506,6 +505,11 @@ abstract class TestCase extends BaseTestCase
             }
         }
 
-        static::assertTrue($wasThrown, $message);
+        static::assertTrue($wasThrown, $outputMessage);
+    }
+
+    public static function assertBetween($value, float $min, float $max, string $message = 'Value'): void
+    {
+        static::assertTrue($value >= $min && $value <= $max, "$message $value is between $min-$max");
     }
 }
