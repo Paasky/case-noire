@@ -27,8 +27,8 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
  * @property-read int|null $events_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Evidence[] $evidences
  * @property-read int|null $evidences_count
- * @property-read \Illuminate\Database\Eloquent\Collection|Person[] $persons
- * @property-read int|null $persons_count
+ * @property-read \Illuminate\Database\Eloquent\Collection|Person[] $people
+ * @property-read int|null $people_count
  * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|CaseTemplate query()
@@ -73,25 +73,25 @@ class CaseTemplate extends CaseNoireModel
         return $this->hasMany(Evidence::class);
     }
 
-    public function persons(): HasMany
+    public function people(): HasMany
     {
         return $this->hasMany(Person::class);
     }
 
     public function getAllModelsAttribute(): Collection
     {
-        return $this->clues
+        return      $this->clues
             ->merge($this->conversations)
             ->merge($this->events)
             ->merge($this->evidences)
-            ->merge($this->persons);
+            ->merge($this->people);
     }
 
     public function delete()
     {
         if ($this->agencyCases()->exists() || $this->clues()->exists() ||
             $this->conversations()->exists() || $this->events()->exists() ||
-            $this->evidences()->exists() || $this->persons()->exists()
+            $this->evidences()->exists() || $this->people()->exists()
         ) {
             throw new ConflictHttpException("CaseTemplate ID {$this->id} is active and cannot be deleted");
         }

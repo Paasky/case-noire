@@ -313,7 +313,7 @@ abstract class TestCase extends BaseTestCase
         $this::assertEquals(0, count($model->conversations));
         $this::assertEquals(0, count($model->events));
         $this::assertEquals(0, count($model->evidences));
-        $this::assertEquals(0, count($model->persons));
+        $this::assertEquals(0, count($model->people));
         $this::assertEquals(0, count($model->modelInstances));
 
         $caseTemplate = $model->caseTemplate ?? $this->caseTemplate();
@@ -349,8 +349,8 @@ abstract class TestCase extends BaseTestCase
         $this::assertEquals($event->id, $model->events[0]->id);
         $this::assertEquals(1, count($model->evidences));
         $this::assertEquals($evidence->id, $model->evidences[0]->id);
-        $this::assertEquals(1, count($model->persons));
-        $this::assertEquals($person->id, $model->persons[0]->id);
+        $this::assertEquals(1, count($model->people));
+        $this::assertEquals($person->id, $model->people[0]->id);
 
         $this::assertEquals(5, $model->modelInstances->count());
 
@@ -369,7 +369,7 @@ abstract class TestCase extends BaseTestCase
         $this::assertEquals(0, count($model->conversations));
         $this::assertEquals(0, count($model->events));
         $this::assertEquals(0, count($model->evidences));
-        $this::assertEquals(0, count($model->persons));
+        $this::assertEquals(0, count($model->people));
         $this::assertEquals(0, count($model->modelInstances));
     }
 
@@ -427,7 +427,7 @@ abstract class TestCase extends BaseTestCase
                 'maxRange' => 123,
                 'allowedTypes' => [Location::TYPE_ADDRESS],
                 'spawnCenterAtType' => Clue::class,
-                'spawnCenterAtTypeName' => 'Test Clue',
+                'spawnCenterAtId' => 'Test Clue',
             ];
             $model->location_settings = $validSettingsArray;
             $this::assertEquals(

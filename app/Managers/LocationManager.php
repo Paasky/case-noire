@@ -56,17 +56,17 @@ class LocationManager
     {
         $locationSettings = $forModel->location_settings;
         $centerType = $locationSettings->getSpawnAtClass();
-        $centerName = $locationSettings->getSpawnAtName();
+        $centerId = $locationSettings->getSpawnAtId();
 
         if ($centerType == AgencyCase::class) {
             $centerModel = $agencyCase;
         } else {
             foreach ($agencyCase->modelInstances->where('model_type', $centerType) as $modelInstance) {
-                if (!$centerName) {
+                if (!$centerId) {
                     $centerModel = $modelInstance;
                     break;
                 }
-                if ($centerName == $modelInstance->model->name ?? null) {
+                if ($centerId == $modelInstance->model->name ?? null) {
                     $centerModel = $modelInstance;
                     break;
                 }
@@ -86,8 +86,8 @@ class LocationManager
 
         if ($orFail) {
             $center = $centerType;
-            if ($centerName) {
-                $center .= " $centerName";
+            if ($centerId) {
+                $center .= " $centerId";
             }
             throw new \InvalidArgumentException("Case {$agencyCase->nameForDebug()}, model {$forModel->nameForDebug()} does not have required center [$center] for a location");
         }

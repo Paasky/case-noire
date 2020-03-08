@@ -14,7 +14,8 @@ class LocationSettings implements Jsonable
     protected $maxRange = 10;
     protected $allowedTypes = Location::TYPES;
     protected $spawnCenterAtType = AgencyCase::class;
-    protected $spawnCenterAtTypeName = '';
+    /** @var int|null */
+    protected $spawnCenterAtId;
 
     public function __construct(array $params = [])
     {
@@ -137,20 +138,20 @@ class LocationSettings implements Jsonable
     }
 
     /**
-     * @return string
+     * @return int|null
      */
-    public function getSpawnAtName(): string
+    public function getSpawnAtId(): ?int
     {
-        return $this->spawnCenterAtTypeName;
+        return $this->spawnCenterAtId;
     }
 
     /**
-     * @param string $spawnCenterAtTypeName
+     * @param int|null $spawnCenterAtId
      * @return LocationSettings
      */
-    public function setSpawnCenterAtTypeName(string $spawnCenterAtTypeName): LocationSettings
+    public function setSpawnCenterAtId(?int $spawnCenterAtId): LocationSettings
     {
-        $this->spawnCenterAtTypeName = $spawnCenterAtTypeName;
+        $this->spawnCenterAtId = $spawnCenterAtId;
         return $this;
     }
 }

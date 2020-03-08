@@ -51,35 +51,32 @@ class CaseManagerTest extends TestCase
         $person3->save();
 
         $clue1 = $this->clue($caseTemplate);
-        $clue1->name = "{$clue1->name} 1";
         $clue1->location_settings = new LocationSettings([
             'mustSpawn' => true,
             'minRange' => 0,
             'maxRange' => 10,
             'spawnCenterAtType' => Person::class,
-            'spawnCenterAtTypeName' => $person1->name,
+            'spawnCenterAtId' => $person1->id,
         ]);
         $clue1->save();
 
         $clue2 = $this->clue($caseTemplate);
-        $clue2->name = "{$clue2->name} 2";
         $clue2->location_settings = new LocationSettings([
             'mustSpawn' => true,
             'minRange' => 0,
             'maxRange' => 10,
             'spawnCenterAtType' => Person::class,
-            'spawnCenterAtTypeName' => $person2->name,
+            'spawnCenterAtId' => $person2->id,
         ]);
         $clue2->save();
 
         $clue3 = $this->clue($caseTemplate);
-        $clue3->name = "{$clue3->name} 3";
         $clue3->location_settings = new LocationSettings([
             'mustSpawn' => true,
             'minRange' => 0,
             'maxRange' => 10,
             'spawnCenterAtType' => Person::class,
-            'spawnCenterAtTypeName' => $person3->name,
+            'spawnCenterAtId' => $person3->id,
         ]);
         $clue3->save();
 

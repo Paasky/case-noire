@@ -32,14 +32,14 @@ class CaseTemplateTest extends TestCase
         $this::assertEquals(1, $caseTemplate->conversations->count());
         $this::assertEquals(1, $caseTemplate->events->count());
         $this::assertEquals(1, $caseTemplate->evidences->count());
-        $this::assertEquals(1, $caseTemplate->persons->count());
+        $this::assertEquals(1, $caseTemplate->people->count());
 
         $this::assertEquals($agencyCase->id, $caseTemplate->agencyCases[0]->id);
         $this::assertEquals($clue->id, $caseTemplate->clues[0]->id);
         $this::assertEquals($conversation->id, $caseTemplate->conversations[0]->id);
         $this::assertEquals($event->id, $caseTemplate->events[0]->id);
         $this::assertEquals($evidence->id, $caseTemplate->evidences[0]->id);
-        $this::assertEquals($person->id, $caseTemplate->persons[0]->id);
+        $this::assertEquals($person->id, $caseTemplate->people[0]->id);
 
         $agencyCase->delete();
         $clue->delete();
@@ -55,6 +55,6 @@ class CaseTemplateTest extends TestCase
         $this::assertEquals(0, $caseTemplate->conversations->count());
         $this::assertEquals(0, $caseTemplate->events->count());
         $this::assertEquals(0, $caseTemplate->evidences->count());
-        $this::assertEquals(0, $caseTemplate->persons->count());
+        $this::assertEquals(0, $caseTemplate->people->count());
     }
 }

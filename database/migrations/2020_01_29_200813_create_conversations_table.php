@@ -16,7 +16,11 @@ class CreateConversationsTable extends Migration
         Schema::create('conversations', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->bigInteger('case_template_id')->index();
+            $table->bigInteger('model_id')->index();
+            $table->string('model_type', 255)->index();
             $table->timestamps();
+
+            $table->unique(['case_template_id', 'model_id', 'model_type'], 'case_model_uniq');
         });
     }
 

@@ -81,7 +81,7 @@ class LocationManagerTest extends TestCase
         $person = $this->person($caseTemplate);
         $person->location_settings = new LocationSettings([
             'spawnCenterAtType' => Clue::class,
-            'spawnCenterAtTypeName' => $clue->name,
+            'spawnCenterAtId' => $clue->name,
         ]);
         $person->save();
 
@@ -113,7 +113,7 @@ class LocationManagerTest extends TestCase
         $person = $this->person($caseTemplate);
         $person->location_settings = new LocationSettings([
             'spawnCenterAtType' => Clue::class,
-            'spawnCenterAtTypeName' => $clue->name,
+            'spawnCenterAtId' => $clue->name,
         ]);
         $person->save();
         $agencyCase->persons()->save($person);

@@ -35,7 +35,7 @@ class CaseManager
 
         // 2) Create CaseTemplate Model instances
         $modelsToSet = $caseTemplate->all_models;
-        $setModelsByClassAndName = [];
+        $setModelsByClassAndId = [];
 
         // Case models can require each other for spawn locations, so keep looping $modelsToSet until
         // a) $modelsToSet is empty or
@@ -44,9 +44,9 @@ class CaseManager
             $somethingWasDone = false;
 
             foreach ($modelsToSet as $i => $model) {
-                if (static::setModelToCaseIfCan($agencyCase, $model, $setModelsByClassAndName)) {
+                if (static::setModelToCaseIfCan($agencyCase, $model, $setModelsByClassAndId)) {
                     unset($modelsToSet[$i]);
-                    $setModelsByClassAndName[get_class($model) . "_{$model->name}"] = true;
+                    $setModelsByClassAndId[get_class($model) . "_{$model->id}"] = true;
                     $somethingWasDone = true;
                 }
             }
@@ -80,10 +80,10 @@ class CaseManager
 
         // b) Has location & center is another model
         if ($hasLocation && !$caseIsCenter) {
-            $reqClassAndName =
+            $reqClassAndId =
                 "{$model->location_settings->getSpawnAtClass()}_" .
-                "{$model->location_settings->getSpawnAtName()}";
-            $requiredClassIsSet = isset($setModelsByClassAndName[$reqClassAndName]);
+                "{$model->location_settings->getSpawnAtId()}";
+            $requiredClassIsSet = isset($setModelsByClassAndName[$reqClassAndId]);
         } else {
             $requiredClassIsSet = false;
         }
